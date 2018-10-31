@@ -5,6 +5,10 @@
   <form id="accountCreate" action="/api/users" method="POST">
     <div class="formError"></div>
     <div class="inputWrapper">
+      <div class="inputLabel">Email</div>
+      <input type="text" name="email" placeholder="syahrul@test.com" />
+    </div>
+    <div class="inputWrapper">
       <div class="inputLabel">First Name</div>
       <input type="text" name="firstName" placeholder="John" />
     </div>
@@ -13,7 +17,11 @@
       <input type="text" name="lastName" placeholder="Smith" />
     </div>
     <div class="inputWrapper">
-      <div class="inputLabel">Phone Number</div>
+      <div class="inputLabel">Address</div>
+      <input type="text" name="address" placeholder="Your address" />
+    </div>
+    <div class="inputWrapper">
+      <div class="inputLabel">Phone Number (Must be 10 digit)</div>
       <input type="text" name="phone" placeholder="(415) 123-4567" />
     </div>
     <div class="inputWrapper">
@@ -22,10 +30,10 @@
     </div>
     <div class="inputWrapper">
       <div class="inputLabel">Do you agree to the terms and conditions?</div>
-      <input type="checkbox" name="tosAgreement" value="agree">
+      <input type="checkbox" name="tosAgreement" value="true">
     </div>
     <div class="inputWrapper ctaWrapper">
-      <button type="submit" class="cta green">Get Started</button>
+      <button type="submit" class="cta green">Create Account</button>
     </div>
   </form>
 </div>

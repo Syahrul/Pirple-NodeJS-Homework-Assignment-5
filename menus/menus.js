@@ -332,8 +332,8 @@ menus.order = (data, callback) => {
                   price += listOfMenu[i.menuId].price * i.quantity;
                   desc.push(listOfMenu[i.menuId].name);
                 });
-                // Stripe don't allow cents
-                const amount = Math.round(price);
+                // Stripe don't allow cents, 1000 usd = 10.00 on Stripe
+                const amount = Math.round(price) * 100;
                 const currency = config.currency;
                 const description =
                   "Payment for: " +
@@ -380,7 +380,7 @@ menus.order = (data, callback) => {
                         );
                       } else {
                         callback(500, {
-                          Error: "Could not create the orders."
+                          Error: err
                         });
                       }
                     });

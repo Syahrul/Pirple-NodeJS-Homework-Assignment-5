@@ -152,13 +152,17 @@ app.bindForms = function() {
         var method = this.method.toUpperCase();
 
         // Hide the error message (if it's currently shown due to a previous error)
-        document.querySelector("#" + formId + " .formError").style.display =
-          "none";
-
-        // Hide the success message (if it's currently shown due to a previous error)
-        if (document.querySelector("#" + formId + " .formSuccess")) {
-          document.querySelector("#" + formId + " .formSuccess").style.display =
+        if (formId) {
+          document.querySelector("#" + formId + " .formError").style.display =
             "none";
+
+          // Hide the success message (if it's currently shown due to a previous error)
+          if (document.querySelector("#" + formId + " .formSuccess")) {
+            document.querySelector(
+              "#" + formId + " .formSuccess"
+            ).style.display =
+              "none";
+          }
         }
 
         // Turn the inputs into a payload
@@ -227,6 +231,7 @@ app.bindForms = function() {
                 // log the user out
                 app.logUserOut();
               } else {
+                if (!formId) return;
                 // Try to get the error from the api, or set a default error message
                 var error =
                   typeof responsePayload.Error == "string"
@@ -260,9 +265,9 @@ app.formResponseProcessor = function(formId, requestPayload, responsePayload) {
   var functionToCall = false;
   // If account creation was successful, try to immediately log the user in
   if (formId == "accountCreate") {
-    // Take the phone and password, and use it to log the user in
+    // Take the email and password, and use it to log the user in
     var newPayload = {
-      phone: requestPayload.phone,
+      email: requestPayload.email,
       password: requestPayload.password
     };
 
@@ -418,23 +423,32 @@ app.loadDataOnPage = function() {
     app.loadAccountEditPage();
   }
 
-  // Logic for dashboard page
+  // Logic for menus page
   if (primaryClass == "pizzamenus") {
     app.loadMenusPage();
+  }
+
+  // Logic for cart page
+  if (primaryClass == "cart") {
+    app.loadCartPage();
+  }
+
+  // Logic for checkout page
+  if (primaryClass == "checkout") {
+    app.loadCheckoutPage();
   }
 };
 
 // Load the account edit page specifically
 app.loadAccountEditPage = function() {
-  // Get the phone number from the current token, or log the user out if none is there
-  var phone =
-    typeof app.config.sessionToken.phone == "string"
-      ? app.config.sessionToken.phone
+  var email =
+    typeof app.config.sessionToken.email == "string"
+      ? app.config.sessionToken.email
       : false;
-  if (phone) {
+  if (email) {
     // Fetch the user data
     var queryStringObject = {
-      phone: phone
+      email
     };
     app.client.request(
       undefined,
@@ -449,15 +463,19 @@ app.loadAccountEditPage = function() {
             responsePayload.firstName;
           document.querySelector("#accountEdit1 .lastNameInput").value =
             responsePayload.lastName;
-          document.querySelector("#accountEdit1 .displayPhoneInput").value =
+          document.querySelector("#accountEdit1 .emailInput").value =
+            responsePayload.email;
+          document.querySelector("#accountEdit1 .phoneInput").value =
             responsePayload.phone;
+          document.querySelector("#accountEdit1 .addressInput").value =
+            responsePayload.address;
 
-          // Put the hidden phone field into both forms
-          var hiddenPhoneInputs = document.querySelectorAll(
-            "input.hiddenPhoneNumberInput"
+          // Put the hidden email field into both forms
+          var hiddenEmailInput = document.querySelectorAll(
+            "input.hiddenEmailInput"
           );
-          for (var i = 0; i < hiddenPhoneInputs.length; i++) {
-            hiddenPhoneInputs[i].value = responsePayload.phone;
+          for (var i = 0; i < hiddenEmailInput.length; i++) {
+            hiddenEmailInput[i].value = responsePayload.email;
           }
         } else {
           // If the request comes back as something other than 200, log the user our (on the assumption that the api is temporarily down or the users token is bad)
@@ -472,8 +490,7 @@ app.loadAccountEditPage = function() {
 
 // Load the menus page specifically
 app.loadMenusPage = function() {
-  // Get the phone number from the current token, or log the user out if none is there
-  var email =
+  const email =
     typeof app.config.sessionToken.email == "string"
       ? app.config.sessionToken.email
       : false;
@@ -499,10 +516,12 @@ app.loadMenusPage = function() {
               let td1 = tr.insertCell(1);
               let td2 = tr.insertCell(2);
               let td3 = tr.insertCell(3);
+              let td4 = tr.insertCell(4);
               td0.innerHTML = responsePayload[key].name;
               td1.innerHTML = responsePayload[key].description;
               td2.innerHTML = "$" + responsePayload[key].price;
-              td3.innerHTML = `<a href="#" data-id="${key}" class="add-to-cart-link">Add to cart</a>`;
+              td3.innerHTML = `<input id="quantity-${key}" name="quantity" />`;
+              td4.innerHTML = `<a href="#" data-id="${key}" class="add-to-cart-link">Add to cart</a>`;
             }
           }
           const addToCartButton = document.querySelectorAll(
@@ -512,9 +531,12 @@ app.loadMenusPage = function() {
             addToCartButton[i].addEventListener("click", function(e) {
               e.preventDefault();
               const menuId = parseInt(e.target.dataset.id);
+              const quantity = parseInt(
+                document.getElementById("quantity-" + menuId).value
+              );
               const payload = {
                 menuId,
-                quantity: 1,
+                quantity,
                 email
               };
               app.client.request(
@@ -525,7 +547,9 @@ app.loadMenusPage = function() {
                 payload,
                 function(statusCode, responsePayload) {
                   if (statusCode == 200) {
-                    window.location = "/cart";
+                    alert("Item has been added to your cart");
+                  } else {
+                    alert(responsePayload.Error);
                   }
                 }
               );
@@ -537,6 +561,208 @@ app.loadMenusPage = function() {
         }
       }
     );
+  } else {
+    app.logUserOut();
+  }
+};
+
+// Available menu
+const listOfMenu = {
+  1: {
+    name: "Margherita",
+    price: 2.99,
+    description: "Tomato sauce, mozzarella, and oregano"
+  },
+  2: {
+    name: "Marinara.",
+    price: 4.99,
+    description: "Tomato sauce, garlic and basil"
+  },
+  3: {
+    name: "Quattro Stagioni.",
+    price: 5.99,
+    description:
+      "Tomato sauce, mozzarella, mushrooms, ham, artichokes, olives, and oregano"
+  },
+  4: {
+    name: "Carbonara.",
+    price: 6.99,
+    description: "Tomato sauce, mozzarella, parmesan, eggs, and bacon"
+  },
+  5: {
+    name: "Frutti di Mare.",
+    price: 4.99,
+    description: "Tomato sauce and seafood"
+  },
+  6: {
+    name: "Quattro Formaggi.",
+    price: 5.99,
+    description:
+      "Tomato sauce, mozzarella, parmesan, gorgonzola cheese, artichokes, and oregano"
+  },
+  7: {
+    name: "Crudo.",
+    price: 3.99,
+    description: "Tomato sauce, mozzarella and Parma ham"
+  },
+  8: {
+    name: "Napoletana or Napoli.",
+    price: 6.99,
+    description: "Tomato sauce, mozzarella, oregano, anchovies"
+  },
+  9: {
+    name: "Pugliese.",
+    price: 12.99,
+    description: "Tomato sauce, mozzarella, oregano, and onions"
+  },
+  10: {
+    name: "Montanara.",
+    price: 15.99,
+    description:
+      "Tomato sauce, mozzarella, mushrooms, pepperoni, and Stracchino (soft cheese)"
+  }
+};
+
+// Load the cart page specifically
+app.loadCartPage = function() {
+  const email =
+    typeof app.config.sessionToken.email == "string"
+      ? app.config.sessionToken.email
+      : false;
+  if (email) {
+    // Fetch the user data
+    var queryStringObject = {
+      email
+    };
+    app.client.request(
+      undefined,
+      "api/viewCart",
+      "GET",
+      queryStringObject,
+      undefined,
+      function(statusCode, responsePayload) {
+        if (statusCode == 200) {
+          if (responsePayload.length == 1) {
+            document.getElementById("cartTable").remove();
+            const c = document.getElementById("cartContainer");
+            c.innerHTML = `<div class="blurb">Your cart is empty</div>`;
+          } else {
+            const table = document.getElementById("cartTable");
+            table.style.display = "block";
+            for (let key = 0, l = responsePayload.length; key < l; key++) {
+              let tr = table.insertRow(parseInt(key) + 1);
+              tr.classList.add("checkRow");
+              if (responsePayload[key].total !== undefined) {
+                let td0 = tr.insertCell(0);
+                td0.colSpan = 5;
+                td0.innerHTML = "TOTAL: $" + responsePayload[key].total;
+              } else {
+                let td0 = tr.insertCell(0);
+                let td1 = tr.insertCell(1);
+                let td2 = tr.insertCell(2);
+                let td3 = tr.insertCell(3);
+                let td4 = tr.insertCell(4);
+                td0.innerHTML = listOfMenu[responsePayload[key].menuId].name;
+                td1.innerHTML =
+                  listOfMenu[responsePayload[key].menuId].description;
+                td2.innerHTML = responsePayload[key].quantity;
+                td3.innerHTML =
+                  "$" + listOfMenu[responsePayload[key].menuId].price;
+                td4.innerHTML = `<a href="#" class="cart-remove" data-id="${
+                  responsePayload[key].menuId
+                }">Remove</a>`;
+                const cartRemove = document.querySelectorAll("a.cart-remove");
+                for (var i = 0; i < cartRemove.length; i++) {
+                  cartRemove[i].addEventListener("click", function(e) {
+                    e.preventDefault();
+                    const menuId = parseInt(e.target.dataset.id);
+                    const payload = {
+                      menuId,
+                      email
+                    };
+                    app.client.request(
+                      undefined,
+                      "api/deleteCart",
+                      "POST",
+                      undefined,
+                      payload,
+                      function(statusCode, responsePayload) {
+                        if (statusCode == 200) {
+                          window.location = "/cart";
+                        }
+                      }
+                    );
+                  });
+                }
+              }
+              const c = document.getElementById("cartContainer");
+              c.innerHTML = `<div class="checkout"><a class="checkout-button cta green" href="/checkout">Proceed to Checkout</a></div>`;
+            }
+          }
+        } else {
+          // If the request comes back as something other than 200, log the user our (on the assumption that the api is temporarily down or the users token is bad)
+          app.logUserOut();
+        }
+      }
+    );
+  } else {
+    app.logUserOut();
+  }
+};
+
+// Load the checkout page specifically
+app.loadCheckoutPage = function() {
+  const email =
+    typeof app.config.sessionToken.email == "string"
+      ? app.config.sessionToken.email
+      : false;
+  if (email) {
+    document.getElementById("ccSubmit").addEventListener("click", function(e) {
+      alert("Please wait while we submit your payment");
+      const validCC = [
+        "4242424242424242",
+        "4000056655665556",
+        "5555555555554444",
+        "2223003122003222",
+        "5200828282828210",
+        "5105105105105100",
+        "378282246310005",
+        "371449635398431",
+        "6011111111111117",
+        "6011000990139424",
+        "30569309025904",
+        "38520000023237",
+        "3566002020360505",
+        "6200000000000005"
+      ];
+      const ccNumber = document.getElementById("ccNumber").value;
+      const ccToken = document.getElementById("cardType").value;
+
+      if (validCC.indexOf(ccNumber) > -1) {
+        // Fetch the user data
+        var payload = {
+          email,
+          cc: ccToken
+        };
+        app.client.request(
+          undefined,
+          "api/checkout",
+          "POST",
+          undefined,
+          payload,
+          function(statusCode, responsePayload) {
+            if (statusCode == 200) {
+              alert("Payment completed!");
+              window.location = "/";
+            } else {
+              alert(responsePayload.Error);
+            }
+          }
+        );
+      } else {
+        alert("Credit card number not valid");
+      }
+    });
   } else {
     app.logUserOut();
   }
