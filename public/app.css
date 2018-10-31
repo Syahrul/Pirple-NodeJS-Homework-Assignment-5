@@ -345,7 +345,10 @@ td a:active {
 #cartTable {
   display: none;
 }
-.checkout-button {
+a.checkout-button {
   margin: 20px auto;
+  display: block;
+}
+a.checkout-button:hover {
   display: block;
 }
