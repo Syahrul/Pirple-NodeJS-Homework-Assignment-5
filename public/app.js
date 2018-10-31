@@ -756,7 +756,7 @@ app.loadCheckoutPage = function() {
           function(statusCode, responsePayload) {
             if (statusCode == 200) {
               alert("Payment completed!");
-              window.location = "/";
+              window.location = "/view/menus";
             } else {
               alert(responsePayload.Error);
             }

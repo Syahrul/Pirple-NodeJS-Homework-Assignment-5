@@ -107,8 +107,8 @@ body.loggedIn .header ul li.loggedOut {
   float: left;
 }
 
-.header .logo img {
-  width: 50%;
+.header img.logo {
+  max-width: 120px;
 }
 
 .content {
