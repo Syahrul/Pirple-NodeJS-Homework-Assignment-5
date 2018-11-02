@@ -1,5 +1,18 @@
-# Pirple NodeJS Homework Assignment #3
+# Pirple NodeJS Homework Assignment #4
 
-- [API Documentation - Assignment #2](https://documenter.getpostman.com/view/3283809/RWgnY1Nf)
+Available commands
 
-- Assignment 3 comes with UI built in
+- help
+- exit
+- view menus
+- view orders
+
+  - view orders --all
+  - view orders --24 (to view orders in the last 24 hours)
+  - view orders --id orderID
+
+- list users
+
+  - list users --all
+  - list users --24 (to view users registered in the last 24 hours)
+  - list users --email syahrul@test.com
