@@ -347,10 +347,11 @@ menus.order = (data, callback) => {
                   item: data.cart,
                   time: Date.now()
                 };
+                const orderID = helpers.createRandomString(20);
                 helpers.stripe(amount, currency, description, cc, result => {
                   if (result) {
                     // if payment is successful, create the order and save it under ./data/orders
-                    _data.create("orders", email, orders, function(err) {
+                    _data.create("orders", orderID, orders, function(err) {
                       // once order saved, email the user
                       if (!err) {
                         const mailText = `Your payment for ${desc
